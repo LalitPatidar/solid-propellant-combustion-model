@@ -1,0 +1,18 @@
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=48:00:00
+#PBS -j oe
+
+# change the current working directory to the directory where
+# the input deck foo.com can be found
+cd /gpfs/group/umt/default/HMX/combustion-model/HMX-final-combustion/November-6/v6/1atm " "
+echo "Starting job on `hostname` at `date`"
+echo " "
+
+module load python
+source activate /storage/home/lkp5147/work/sw/cantera-cython
+
+python run.py
+
+echo " "
+echo "Completing job on `hostname` at `date`"
+echo " "

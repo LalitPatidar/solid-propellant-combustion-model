@@ -1,0 +1,259 @@
+import time
+import numpy as np
+import melt_layer
+import delta_layer
+############################################################################################################################
+# Initial parameters
+
+burn_rate = 0.035
+density = 1.9
+mdot_guess = density*burn_rate #g/cm2-s
+
+def pyrolysis_law(mdot):
+    """
+    RDX-Zenin fit from Anderson Miller
+    Es = 18539.0 #cal/mol
+    As = 6.134e5 #g/cm2-s
+    R = 1.9872 #cal/mol-K
+    """
+    
+    """
+    HMX-Zenin fit from Zenin data
+    """
+    Es = 23250.0 #cal/mol
+    As = 7.0e6 #g/cm2-s
+    R = 1.9872 #cal/mol-K
+    
+    Ts =  -Es/R/np.log(mdot/As)
+    return Ts
+    
+parameters = {
+                "mdot":mdot_guess,
+                "Ts":pyrolysis_law(mdot_guess),
+                "Tmelt":553.0,
+                "Tbeta2delta":463.0,
+                "Tinit":298.0
+}
+
+def get_liquid_enthalpy(name,T):
+    with open('HMX-liquid-phase-mechanism.txt','r') as File:
+        lines = File.readlines()
+        
+        flag1 = 0
+        flag2 = 1
+        
+        for i in range(len(lines)):
+            if 'THERMO' in lines[i]:
+                flag1 = 1
+                
+            if flag1 == 1 and 'END' in lines[i]:
+                flag2 = 0
+                
+            if flag1==1 and flag2==1:
+                if lines[i].startswith(name+' '):
+                    a1 = float(lines[i+2][30:45])
+                    a2 = float(lines[i+2][45:60])
+                    a3 = float(lines[i+2][60:75])
+                    a4 = float(lines[i+3][0:15])
+                    a5 = float(lines[i+3][15:30])
+                    a6 = float(lines[i+3][30:45])
+                    
+    H_RT = a1 + a2*T/2.0 + a3*(T**2)/3.0 + a4*(T**3)/4.0 + a5*(T**4)/5.0 + a6/T
+    
+    H = H_RT*1.9872*T
+    
+    return H
+
+with open('run.log','w') as File:
+    File.writelines('%15s %15s %15s %15s %15s %15s %15s %15s %15s %15s %15s\n' % ('Iteration','mdot(gm/cm2-s)', 'mdot_new(gm/cm2-s)', 'Tsurf(K)', 'Tsurf_new(K)','k_gas', 'dTdx_gas','k_liquid', 'dTdx_liquid', 'Yh_gas', 'Yh_liquid'))
+
+residual = 1.0
+iteration = 0
+while (residual > 1e-3):
+    iteration = iteration + 1
+    start = time.time()
+    
+    print("Solving delta-HMX layer ..")
+    delta_layer.main(parameters)
+
+    print("Solving melt layer ...")
+    Ts_liquid, Ysurf,lambda_liquid, dTdx_liquid, sum_Yh_liquid = melt_layer.main('HMX-liquid-phase-mechanism.txt','log-file-data-minima.txt', parameters)
+
+    end = time.time()
+
+    print("Melt layer solved")
+    print('Wall time = %f'%(end-start))
+
+    ############################################################################################################################
+    print("Solving gas phase equations using cantera...")
+    import cantera as ct
+    import numpy as np
+
+    p = 1.0 * ct.one_atm
+    tburner = parameters["Ts"]
+    #tburner = Ts_liquid
+    
+    # convert to SI units for cantera
+    mdot = parameters["mdot"]*100.0*100.0/1000.0
+    reactants = {}
+
+    width = 0.003 # m
+    loglevel = 1  # amount of diagnostic output (0 to 5)
+
+    gas = ct.Solution('PSU-HMX-mechanism.cti')
+       
+    for item in Ysurf:
+        if item in gas.species_names:
+            reactants[item] = Ysurf[item]
+            
+        if item=='c_HONO' or item=='t_HONO':
+            reactants['HONO'] = Ysurf['c_HONO'] + Ysurf['t_HONO']
+        
+        if item == 'CH2NNO2':
+            reactants['H2CNNO2'] = Ysurf[item]
+            
+        if item == 'INT202a' or item == 'INT202c':
+            reactants['INT202a'] = Ysurf['INT202a'] + Ysurf['INT202c']
+            
+        if item == 'CH2N':
+            reactants['H2CN'] = Ysurf[item]
+            
+        if item == 'CH2NNO':
+            reactants['H2CNNO'] = Ysurf[item]
+            
+        if item == 'CH2NH':
+            reactants['H2CNH'] = Ysurf[item]
+            
+        if item == 'N2H':
+            reactants['NNH'] = Ysurf[item]
+            
+    factor = 1.0/sum(reactants.values())
+
+    for k in reactants:
+        reactants[k] = reactants[k]*factor
+
+    gas.TPY = tburner, p, reactants
+
+    with open('surface_species.txt','w') as File:
+        File.writelines('%20s %15s %20s %15s\n'%('Species','Y(0-)','Species', 'Y(0+)'))
+        for key in Ysurf:
+            if key in reactants:
+                File.writelines('%20s %15.3E %20s %15.3E\n'%(key,Ysurf[key],key, reactants[key])) 
+            
+            else:
+                File.writelines('%20s %15.3E\n'%(key,Ysurf[key]))
+                
+        for key,value in reactants.items():
+            if key not in Ysurf and value>0.0:
+                File.writelines('%20s %15s %20s %15.3E\n'%('','',key, reactants[key]))
+            
+    f = ct.BurnerFlame(gas, width=width)
+    f.burner.mdot = mdot
+    f.set_refine_criteria(ratio=3.0, slope=0.05, curve=0.1)
+    #f.show_solution()
+
+    f.transport_model = 'Mix'
+    f.solve(loglevel, auto=True)
+
+    f.write_csv('gas_phase_solution.csv', quiet=False)
+
+    print("Gas phase equations solved")
+
+    ############################################################################################################################
+    # Energy balance at the liquid-gas interface to get new mdot
+    lambda_dTdx_gas = f.thermal_conductivity[0]*(f.T[1]-f.T[0])/(f.grid[1]-f.grid[0])
+    dTdx_gas = (f.T[1]-f.T[0])/(f.grid[1]-f.grid[0])/100.0
+    #convert to CGS units
+    lambda_dTdx_gas = lambda_dTdx_gas/4.184/100.0/100.0
+
+    #sum_Yh_gas = f.enthalpy_mass[0]/4.184/1000.0
+    
+    gas_surf = ct.Solution('PSU-HMX-mechanism.cti')
+    gas_surf.TPY = tburner, p, reactants
+    
+    YH = np.multiply(gas_surf.Y,gas_surf.standard_enthalpies_RT*1.9872*tburner)
+    Yh = np.divide(YH,gas_surf.molecular_weights)
+    
+    sum_Yh_gas = sum(Yh)
+    
+    with open('Enthalpies_across_surface.txt','w') as File:
+        File.writelines('%20s %15s %15s %15s %15s\n'%('Species', 'Y','Hg(molar)','Hl(molar)', 'Y*(Hg-Hl)'))
+        
+        sum_Yh_gas2 = 0
+        sum_Yh_liquid2 = 0
+        
+        for i in range(gas_surf.n_species):
+            y = gas_surf.Y[i]
+            Hg = gas_surf.standard_enthalpies_RT[i]*1.9872*tburner
+            
+            if y == 0.0:
+                Hl = 0.0
+            else:
+                name = gas_surf.species_names[i]
+                
+                if name == 'HONO':
+                    Hl = get_liquid_enthalpy('t_HONO',tburner)
+                    
+                elif name == 'H2CNNO2':
+                    Hl = get_liquid_enthalpy('CH2NNO2',tburner)
+                    
+                elif name == 'INT202a':
+                    Hl = get_liquid_enthalpy('INT202a',tburner)
+            
+                elif name == 'H2CN':
+                    Hl = get_liquid_enthalpy('CH2N',tburner)
+                    
+                elif name == 'H2CNNO':
+                    Hl = get_liquid_enthalpy('CH2NNO',tburner)
+            
+                elif name == 'H2CNH':
+                    Hl = get_liquid_enthalpy('CH2NH',tburner)
+                    
+                elif name == 'NNH':
+                    Hl = get_liquid_enthalpy('N2H',tburner)
+                
+                #elif name == 'HMX':
+                #    Hl = Hg - 38700.0    
+                else:
+                    Hl = get_liquid_enthalpy(name,tburner)
+            
+            sum_Yh_gas2 = sum_Yh_gas2 + y*Hg/gas_surf.molecular_weights[i]
+            sum_Yh_liquid2 = sum_Yh_liquid2 + y*Hl/gas_surf.molecular_weights[i]
+                    
+            File.writelines('%20s %15.3E %15.3E %15.3E %15.3E\n' %(gas_surf.species_names[i], y, Hg, Hl, y*(Hg-Hl)))
+    
+    mdot_new = (lambda_dTdx_gas - lambda_liquid*dTdx_liquid)/(sum_Yh_gas - sum_Yh_liquid)
+    mdot_new2 = (lambda_dTdx_gas - lambda_liquid*dTdx_liquid)/(sum_Yh_gas2 - sum_Yh_liquid2)
+    
+    LHS = lambda_liquid*dTdx_liquid + parameters["mdot"]*sum_Yh_gas2 - parameters["mdot"]*sum_Yh_liquid2
+    RHS = lambda_dTdx_gas  
+
+    #print(lambda_dTdx_gas,lambda_dTdx_liquid)
+    print(sum_Yh_gas, sum_Yh_liquid)
+    print(sum_Yh_gas2, sum_Yh_liquid2)
+    print("New mdot2 = %f" %mdot_new2)
+    
+    with open('run.log','a') as File:
+        File.writelines('%15d %15.5f %15.5f %15.2f %15.2f %15.3E %15.3E %15.3E %15.3E %15.3E %15.3E\n' % \
+        (iteration,parameters["mdot"],mdot_new2,tburner,pyrolysis_law(mdot_new),f.thermal_conductivity[0]/4.184/100.0, dTdx_gas,lambda_liquid, dTdx_liquid, sum_Yh_gas,sum_Yh_liquid))
+    
+    print("New mdot = %f" %mdot_new2)
+    residual = abs(mdot_new2 - parameters["mdot"])
+
+    if RHS > LHS:
+        if (parameters["mdot"])*1.03 > mdot_new2:
+            parameters["mdot"] = (parameters["mdot"] + mdot_new2)/2.0
+        else:    
+            parameters["mdot"] = (parameters["mdot"])*1.03
+    else:
+        if (parameters["mdot"])*0.97 < mdot_new2:
+            parameters["mdot"] = (parameters["mdot"] + mdot_new2)/2.0
+        else:    
+            parameters["mdot"] = (parameters["mdot"])*0.97
+            
+  
+    parameters["Ts"] = pyrolysis_law(parameters["mdot"])
+    
+print("Solution converged")
+print("Burn-rate = ",mdot_new2/density)
+

@@ -1,0 +1,2 @@
+      Iteration  mdot(gm/cm2-s) mdot_new(gm/cm2-s)        Tsurf(K)    Tsurf_new(K)           k_gas        dTdx_gas        k_liquid     dTdx_liquid          Yh_gas       Yh_liquid
+              1         0.06650         0.06746          633.39          633.88       8.509E-05       1.103E+05       7.716E-04       1.104E+03       1.698E+02       4.322E+01

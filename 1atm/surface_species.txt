@@ -1,0 +1,116 @@
+             Species           Y(0-)              Species           Y(0+)
+                 HMX       7.504E-01                  HMX       7.504E-01
+             INT249a       6.711E-06              INT249a       6.712E-06
+              t_HONO       2.571E-03
+                  NO       8.114E-03                   NO       8.115E-03
+                 NO2       2.002E-02                  NO2       2.002E-02
+              c_HONO       9.027E-04
+               ONNO2       7.063E-03                ONNO2       7.063E-03
+                 H2O       1.011E-02                  H2O       1.011E-02
+             INT202a       6.442E-07              INT202a       6.555E-07
+             INT202c       1.128E-08
+             INT206e       2.898E-05              INT206e       2.899E-05
+                 N2O       6.072E-02                  N2O       6.072E-02
+             INT248a       7.696E-12
+             INT233a       1.538E-09              INT233a       1.538E-09
+             INT101a       4.888E-08              INT101a       4.888E-08
+          INT202c_RO       2.538E-15
+          INT128a_RO       8.361E-13
+             CH2NNO2       1.102E-03
+             INT128a       2.205E-09
+                 TAZ       5.328E-09
+             INT132a       2.131E-08              INT132a       2.131E-08
+             INT235b       5.936E-10
+             INT189b       7.440E-06
+             INT251c       9.376E-10
+             INT205c       5.609E-06
+             INT148a       7.374E-13
+             CH2NCHO       6.777E-07
+              INT91a       2.802E-08
+             INT177a       4.186E-15
+             INT120b       3.212E-06              INT120b       3.212E-06
+                CH2O       4.180E-02                 CH2O       4.180E-02
+                 HCN       2.609E-02                  HCN       2.609E-02
+                CH2N       1.542E-08
+              CH2NNO       1.150E-06
+             INT121a       8.815E-05              INT121a       8.815E-05
+             INT150a       1.521E-07
+              INT75a       5.551E-13
+              INT74a       6.222E-10               INT74a       6.222E-10
+               CH2NH       3.223E-07
+             INT186b       3.247E-15
+          INT186b_RO       5.418E-22
+             INT112c       8.341E-21
+             INT112a       3.056E-15
+             INT232a       4.277E-12              INT232a       4.277E-12
+         INT233a_RO1       1.692E-15
+             INT159a       7.564E-13
+            CH2NHCHO       2.647E-07             CH2NHCHO       2.647E-07
+              INT86a       1.570E-05               INT86a       1.570E-05
+             INT265a       6.402E-08
+          INT235a_RO       1.470E-09
+             INT161a       3.538E-10
+             INT251d       3.210E-09
+             INT177b       5.266E-10
+             INT133a       1.433E-05
+         INT103c_cis       6.003E-08
+                 HNO       6.372E-09                  HNO       6.372E-09
+                  CO       1.025E-03                   CO       1.026E-03
+              CH2NCO       8.342E-06               CH2NCO       8.343E-06
+              INT76a       1.541E-08
+              NH2CHO       1.933E-08
+               NH2NO       3.850E-09
+             INT105a       7.582E-06              INT105a       7.582E-06
+              INT75f       2.405E-09               INT75f       2.405E-09
+                 N2H       1.909E-09
+             INT206a       3.830E-16
+             INT206b       9.897E-15
+             INT235a       2.390E-12
+          INT159a_RO       7.506E-23
+              INT85d       1.375E-22
+               HCOOH       3.666E-02                HCOOH       3.667E-02
+              INT88d       9.259E-14
+             INT162b       3.101E-05              INT162b       3.101E-05
+             INT132d       5.942E-08              INT132d       5.943E-08
+              INT85b       1.486E-10
+             INT161f       1.207E-10
+             INT131b       8.514E-13
+              INT87d       6.574E-10
+             INT115a       5.426E-07
+             INT114a       1.607E-10
+             INT131a       6.201E-06
+             INT207a       3.338E-07
+             INT177c       1.485E-09
+             INT191b       4.990E-08
+             INT161b       3.251E-10
+                HNCO       4.106E-07                 HNCO       4.106E-07
+              INT90b       2.092E-12
+                 CO2       2.915E-04                  CO2       2.915E-04
+                ONNH       4.687E-12
+               NH2CO       9.315E-12
+              INT84f       2.862E-20
+                OCHO       3.531E-10                 OCHO       3.531E-10
+                 HCO       4.202E-03                  HCO       4.202E-03
+              INT77a       2.940E-07
+                HOCO       3.638E-06                 HOCO       3.638E-06
+            CH2NCOOH       1.101E-07
+              ONTNTA       7.723E-04               ONTNTA       7.723E-04
+             INT295a       6.892E-08              INT295a       6.893E-08
+             INT296a       9.928E-10
+          INT296a_RO       1.521E-07
+             INT325a       1.803E-09
+         INT325a_RO1       2.299E-09
+         INT325a_RO2       5.304E-09
+             INT279a       7.667E-11              INT279a       7.667E-11
+             INT279b       3.079E-11
+             INT280a       6.742E-12
+          INT280a_RO       7.305E-11
+             INT281a       5.038E-08
+             INT103e       2.424E-10
+                  N2       2.796E-02                   N2       2.796E-02
+                                                     HONO       3.474E-03
+                                                  H2CNNO2       1.102E-03
+                                                     H2CN       1.542E-08
+                                                   H2CNNO       1.150E-06
+                                                    H2CNH       3.223E-07
+                                                      NNH       1.909E-09
